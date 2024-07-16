@@ -9,6 +9,8 @@ from controller import detalleFactura_controller
 class DetalleFactura(BaseModel):
     factura_id: str
     producto_id: int
+    nombre_producto: str
+    descripcion_producto: str
     cantidad: int
     precio_unitario: float
     incluye_iva: bool
@@ -19,6 +21,8 @@ class DetalleFactura(BaseModel):
 class DetalleFacturaUpdate(BaseModel):
     factura_id: str
     producto_id: int
+    nombre_producto: str
+    descripcion_producto: str
     cantidad: int
     precio_unitario: float
     incluye_iva: bool
@@ -43,6 +47,8 @@ def createDetalleFactura(detalle_factura: DetalleFactura):
     return detalleFactura_controller.createDetalleFactura(
         detalle_factura.factura_id, 
         detalle_factura.producto_id, 
+        detalle_factura.nombre_producto,
+        detalle_factura.descripcion_producto,
         detalle_factura.cantidad, 
         detalle_factura.precio_unitario, 
         detalle_factura.incluye_iva, 
@@ -51,12 +57,18 @@ def createDetalleFactura(detalle_factura: DetalleFactura):
         detalle_factura.total
     )
 
+@appDetalleFactura.get("/detalle_factura/factura/{factura_id}", tags=["Detalle Factura"])
+def getDetalleFacturaByFacturaId(factura_id: str):
+    return detalleFactura_controller.getDetalleFacturaByFacturaId(factura_id)
+
 @appDetalleFactura.put("/detalle_factura/{detalle_id}", tags=["Detalle Factura"])
 def updateDetalleFactura(detalle_id: int, detalle_factura: DetalleFacturaUpdate):
     return detalleFactura_controller.updateDetalleFactura(
         detalle_id, 
         detalle_factura.factura_id, 
         detalle_factura.producto_id, 
+        detalle_factura.nombre_producto,
+        detalle_factura.descripcion_producto,
         detalle_factura.cantidad, 
         detalle_factura.precio_unitario, 
         detalle_factura.incluye_iva, 
@@ -68,3 +80,11 @@ def updateDetalleFactura(detalle_id: int, detalle_factura: DetalleFacturaUpdate)
 @appDetalleFactura.delete("/detalle_factura/{detalle_id}", tags=["Detalle Factura"])
 def deleteDetalleFactura(detalle_id: int):
     return detalleFactura_controller.deleteDetalleFactura(detalle_id)
+
+@appDetalleFactura.delete("/detalle_factura/factura/{factura_id}", tags=["Detalle Factura"])
+def deleteDetalleFacturaByFacturaId(factura_id: str):
+    return detalleFactura_controller.deleteDetalleFacturaByFacturaId(factura_id)
+
+@appDetalleFactura.get("/detalle_factura/factura/{factura_id}/nombres_productos", tags=["Detalle Factura"])
+def getNombresProductosByFacturaId(factura_id: str):
+    return detalleFactura_controller.getNombresProductosByFacturaId(factura_id)

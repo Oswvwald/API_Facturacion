@@ -44,27 +44,55 @@ def ObtenerDetalleFacturaId(detalle_id):
         Facturacion_app.commit()
         return str(e)
 
-def CrearDetalleFactura(detalle_id, factura_id, producto_id, cantidad, precio_unitario, incluye_iva, porcentaje_iva, subtotal, total):
+def CrearDetalleFactura(factura_id, producto_id, nombre_producto, descripcion_producto, cantidad, precio_unitario, incluye_iva, porcentaje_iva, subtotal, total):
     try:
         cursor = Facturacion_app.cursor()
-        query = "INSERT INTO Detalle_Factura (detalle_id, factura_id, producto_id, cantidad, precio_unitario, incluye_iva, porcentaje_iva, subtotal, total) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING *"
-        cursor.execute(query, (detalle_id, factura_id, producto_id, cantidad, precio_unitario, incluye_iva, porcentaje_iva, subtotal, total))
+        query = """
+            INSERT INTO Detalle_Factura (
+                factura_id, producto_id, nombre_producto, descripcion_producto, 
+                cantidad, precio_unitario, incluye_iva, porcentaje_iva, 
+                subtotal, total
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            ) RETURNING *
+        """
+        cursor.execute(query, (factura_id, producto_id, nombre_producto, descripcion_producto, cantidad, precio_unitario, incluye_iva, porcentaje_iva, subtotal, total))
         row = cursor.fetchone()
         Facturacion_app.commit()
         if row:
-            new_detalle_factura = dict(zip([column[0] for column in cursor.description], row))
-            new_detalle_factura = convert_fields(new_detalle_factura)
+            new_detalle_factura = convert_fields(dict(zip([column[0] for column in cursor.description], row)))
             return new_detalle_factura
         else:
             return None
     except Exception as e:
         return str(e)
 
-def ActualizarDetalleFactura(detalle_id, factura_id, producto_id, cantidad, precio_unitario, incluye_iva, porcentaje_iva, subtotal, total):
+def ObtenerDetallesPorFactura(factura_id):
     try:
         cursor = Facturacion_app.cursor()
-        query = "UPDATE Detalle_Factura SET factura_id = %s, producto_id = %s, cantidad = %s, precio_unitario = %s, incluye_iva = %s, porcentaje_iva = %s, subtotal = %s, total = %s WHERE detalle_id = %s RETURNING *"
-        cursor.execute(query, (factura_id, producto_id, cantidad, precio_unitario, incluye_iva, porcentaje_iva, subtotal, total, detalle_id))
+        query = "SELECT * FROM Detalle_Factura WHERE factura_id = %s"
+        cursor.execute(query, (factura_id,))
+        detalles_factura = cursor.fetchall()
+        detalles_factura_dict = [dict(zip([column[0] for column in cursor.description], row)) for row in detalles_factura]
+        detalles_factura_dict = [convert_fields(detalle) for detalle in detalles_factura_dict]
+        Facturacion_app.commit()
+        return detalles_factura_dict
+    except Exception as e:
+        print(f"Error al obtener detalles de factura: {e}")
+        return []
+
+def ActualizarDetalleFactura(detalle_id, factura_id, producto_id, nombre_producto, descripcion_producto, cantidad, precio_unitario, incluye_iva, porcentaje_iva, subtotal, total):
+    try:
+        cursor = Facturacion_app.cursor()
+        query = """
+            UPDATE Detalle_Factura 
+            SET factura_id = %s, producto_id = %s, nombre_producto = %s, descripcion_producto = %s, 
+                cantidad = %s, precio_unitario = %s, incluye_iva = %s, porcentaje_iva = %s, 
+                subtotal = %s, total = %s 
+            WHERE detalle_id = %s 
+            RETURNING *
+        """
+        cursor.execute(query, (factura_id, producto_id, nombre_producto, descripcion_producto, cantidad, precio_unitario, incluye_iva, porcentaje_iva, subtotal, total, detalle_id))
         row = cursor.fetchone()
         Facturacion_app.commit()
         if row:
@@ -89,6 +117,36 @@ def EliminarDetalleFactura(detalle_id):
             return deleted_detalle_factura
         else:
             return None
+    except Exception as e:
+        cursor.execute("ROLLBACK")
+        Facturacion_app.commit()
+        return str(e)
+
+def eliminarDetallesPorFacturaId(factura_id):
+    try:
+        cursor = Facturacion_app.cursor()
+        query = "DELETE FROM detalle_factura WHERE factura_id = %s"
+        cursor.execute(query, (factura_id,))
+        Facturacion_app.commit()
+        
+        if cursor.rowcount > 0:
+            return f"Se eliminaron {cursor.rowcount} detalles de la factura con ID {factura_id}."
+        else:
+            return "No se encontraron detalles para eliminar."
+    except Exception as e:
+        Facturacion_app.rollback()
+        return f"Error al eliminar detalles: {str(e)}"
+    finally:
+        cursor.close()
+
+def ObtenerNombresProductosPorFactura(factura_id):
+    try:
+        cursor = Facturacion_app.cursor()
+        query = "SELECT nombre_producto FROM Detalle_Factura WHERE factura_id = %s"
+        cursor.execute(query, (factura_id,))
+        nombres_productos = cursor.fetchall()
+        Facturacion_app.commit()
+        return [nombre_producto[0] for nombre_producto in nombres_productos]
     except Exception as e:
         cursor.execute("ROLLBACK")
         Facturacion_app.commit()
