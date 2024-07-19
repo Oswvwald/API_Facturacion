@@ -151,3 +151,23 @@ def ObtenerNombresProductosPorFactura(factura_id):
         cursor.execute("ROLLBACK")
         Facturacion_app.commit()
         return str(e)
+
+def ObtenerDetallesPorFactura(factura_id):
+    try:
+        cursor = Facturacion_app.cursor()
+        query = "SELECT * FROM Detalle_Factura WHERE factura_id = %s"
+        cursor.execute(query, (factura_id,))
+        detalles_factura = cursor.fetchall()
+        
+        # Convertir cada fila de resultados en un diccionario
+        detalles_factura_dict = [dict(zip([column[0] for column in cursor.description], row)) for row in detalles_factura]
+        
+        # Convertir los valores de Decimal a float en cada detalle
+        detalles_factura_dict = [convert_fields(detalle) for detalle in detalles_factura_dict]
+        
+        Facturacion_app.commit()
+        return detalles_factura_dict
+    except Exception as e:
+        cursor.execute("ROLLBACK")
+        Facturacion_app.commit()
+        return str(e)

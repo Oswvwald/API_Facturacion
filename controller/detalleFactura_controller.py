@@ -59,3 +59,14 @@ def getNombresProductosByFacturaId(factura_id):
         return JSONResponse(status_code=200, content={"status": 200, "nombresProductos": nombres_productos})
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": 500, "message": str(e)})
+
+# Nueva función para obtener detalles de una factura específica
+def getDetallesPorFacturaId(factura_id):
+    try:
+        detalles = detalleFactura_model.ObtenerDetallesPorFactura(factura_id)
+        if detalles:
+            return JSONResponse(status_code=200, content={"status": 200, "detallesFactura": detalles})
+        else:
+            return JSONResponse(status_code=404, content={"status": 404, "message": "No se encontraron detalles para la factura especificada"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"status": 500, "message": str(e)})

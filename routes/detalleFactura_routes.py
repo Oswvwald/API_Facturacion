@@ -88,3 +88,8 @@ def deleteDetalleFacturaByFacturaId(factura_id: str):
 @appDetalleFactura.get("/detalle_factura/factura/{factura_id}/nombres_productos", tags=["Detalle Factura"])
 def getNombresProductosByFacturaId(factura_id: str):
     return detalleFactura_controller.getNombresProductosByFacturaId(factura_id)
+
+# Nueva ruta para obtener todos los detalles de una factura específica
+@appDetalleFactura.get("/detalle_factura/detalles_por_factura/{factura_id}", tags=["Detalle Factura"])
+def getDetallesPorFacturaId(factura_id: str):
+    return detalleFactura_controller.getDetallesPorFacturaId(factura_id)
